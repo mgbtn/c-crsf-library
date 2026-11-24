@@ -32,6 +32,10 @@ if(CRSF_BUILD_TESTS)
     target_link_libraries(test_ringbuf crsf_lib)
     add_test(NAME ringbuf COMMAND test_ringbuf)
     
+    add_executable(test_ctx tests/test_ctx.c)
+    target_link_libraries(test_ctx crsf_lib)
+    add_test(NAME ctx COMMAND test_ctx)
+    
     add_executable(test_parse tests/test_parse.c)
     target_link_libraries(test_parse crsf_lib)
     add_test(NAME parse COMMAND test_parse)
