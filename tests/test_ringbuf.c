@@ -61,7 +61,41 @@ int main(void) {
     crsf_addstr(hb, sizeof(hb));
     crsf_pack_t *p2 = crsf_checkBuff();
     TEST("bad_crc_rejected", p2 == NULL);
-    
+
+    // Тест 6: два независимых контекста, чередующийся разбор
+    crsf_ctx_t ctx_a, ctx_b;
+    crsf_ctx_init(&ctx_a);
+    crsf_ctx_init(&ctx_b);
+
+    uint8_t hb_a[] = {0xC8, 0x05, 0x0B, 0x11, 0x22, 0x33, 0x00};
+    hb_a[6] = crsf_crc8(&hb_a[2], 4);
+    uint8_t hb_b[] = {0xEE, 0x05, 0x0B, 0xAA, 0xBB, 0xCC, 0x00};
+    hb_b[6] = crsf_crc8(&hb_b[2], 4);
+
+    crsf_ctx_addstr(&ctx_a, hb_a, 3);
+    crsf_ctx_addstr(&ctx_b, hb_b, 3);
+    TEST("ctx_partial_a", crsf_ctx_checkBuff(&ctx_a) == NULL);
+    TEST("ctx_partial_b", crsf_ctx_checkBuff(&ctx_b) == NULL);
+
+    crsf_ctx_addstr(&ctx_a, &hb_a[3], sizeof(hb_a) - 3);
+    crsf_ctx_addstr(&ctx_b, &hb_b[3], sizeof(hb_b) - 3);
+
+    crsf_pack_t *pa = crsf_ctx_checkBuff(&ctx_a);
+    crsf_pack_t *pb = crsf_ctx_checkBuff(&ctx_b);
+    TEST("ctx_a_device", pa != NULL && pa->device == 0xC8);
+    TEST("ctx_b_device", pb != NULL && pb->device == 0xEE);
+    TEST("ctx_a_payload", pa != NULL && pa->payload[0] == 0x11 && pa->payload[2] == 0x33);
+    TEST("ctx_b_payload", pb != NULL && pb->payload[0] == 0xAA && pb->payload[2] == 0xCC);
+    TEST("ctx_independent_buffers", pa != NULL && pb != NULL && pa->raw != pb->raw &&
+                                   pa->payload != pb->payload);
+
+    // Сброс одного контекста не влияет на другой
+    crsf_ctx_reset(&ctx_a);
+    TEST("ctx_reset_a", crsf_ctx_checkBuff(&ctx_a) == NULL);
+    crsf_ctx_addstr(&ctx_b, hb_b, sizeof(hb_b));
+    crsf_pack_t *pb2 = crsf_ctx_checkBuff(&ctx_b);
+    TEST("ctx_b_still_works", pb2 != NULL && pb2->device == 0xEE);
+
     printf("\n=== Ringbuf: %d passed, %d failed ===\n", pass, fail);
     return fail ? 1 : 0;
 }

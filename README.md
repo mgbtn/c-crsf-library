@@ -53,17 +53,18 @@ ctest --test-dir build -C Release --output-on-failure
 ```c
 #include "crsf.h"
 
-// 1. Инициализация
-crsf_init();
+// 1. Контекст парсера (хранит всё состояние: буфер, парсер и результат)
+crsf_ctx_t ctx;
+crsf_ctx_init(&ctx);
 
-// 2. Передача сырых байт с UART в буфер
+// 2. Передача сырых байт с UART в буфер контекста
 uint8_t rx_data[32];
 size_t len = uart_read(rx_data, sizeof(rx_data));
-crsf_addstr(rx_data, len);
+crsf_ctx_addstr(&ctx, rx_data, len);
 
 // 3. Проверка буфера на наличие пакета
 crsf_pack_t *pack;
-while ((pack = crsf_checkBuff()) != NULL) {
+while ((pack = crsf_ctx_checkBuff(&ctx)) != NULL) {
     switch (pack->type) {
         case CRSF_FRAME_RC_CHANNELS: {
             crsf_rc_channels_t rc;
@@ -81,6 +82,31 @@ while ((pack = crsf_checkBuff()) != NULL) {
     }
 }
 ```
+
+### Несколько парсеров (потокобезопасность)
+
+Старые функции `crsf_init` / `crsf_addstr` / `crsf_checkBuff` оставлены для обратной совместимости: они используют общий статический контекст и не потокобезопасны. Для независимого разбора в нескольких потоках используйте контекстный API — каждому потоку свой `crsf_ctx_t`.
+
+```c
+#include "crsf.h"
+
+crsf_ctx_t uart1_ctx;
+crsf_ctx_t uart2_ctx;
+
+crsf_ctx_init(&uart1_ctx);
+crsf_ctx_init(&uart2_ctx);
+
+// В каждом потоке работаем только со своим контекстом
+crsf_ctx_addstr(&uart1_ctx, rx_data1, len1);
+crsf_ctx_addstr(&uart2_ctx, rx_data2, len2);
+
+crsf_pack_t *pack;
+while ((pack = crsf_ctx_checkBuff(&uart1_ctx)) != NULL) {
+    // ...
+}
+```
+
+Один контекст должен использоваться только одним потоком одновременно (или быть защищён мьютексом). Указатели `payload` / `raw` в `crsf_pack_t` ссылаются на буфер контекста и действительны до следующего вызова `crsf_ctx_checkBuff` / `crsf_ctx_reset` для этого контекста.
 
 ---
 
@@ -100,6 +126,7 @@ while ((pack = crsf_checkBuff()) != NULL) {
 Библиотека покрыта модульными тестами и нагрузочным тестом:
 - `test_crc` — валидация алгоритма CRC8 DVB-S2
 - `test_ringbuf` — проверка кольцевого буфера и ресинхронизации
+- `test_ctx` — изоляция нескольких независимых контекстов парсера
 - `test_make` / `test_parse` — тесты генерации и парсинга
 
 ```bash
@@ -151,17 +178,18 @@ Do what you must and come what may
 ```c
 #include "crsf.h"
 
-// 1. Initialize
-crsf_init();
+// 1. Parser context (holds all state: buffer, parser and result)
+crsf_ctx_t ctx;
+crsf_ctx_init(&ctx);
 
-// 2. Feed raw UART bytes into the buffer
+// 2. Feed raw UART bytes into the context buffer
 uint8_t rx_data[32];
 size_t len = uart_read(rx_data, sizeof(rx_data));
-crsf_addstr(rx_data, len);
+crsf_ctx_addstr(&ctx, rx_data, len);
 
 // 3. Check buffer for available packets
 crsf_pack_t *pack;
-while ((pack = crsf_checkBuff()) != NULL) {
+while ((pack = crsf_ctx_checkBuff(&ctx)) != NULL) {
     switch (pack->type) {
         case CRSF_FRAME_RC_CHANNELS: {
             crsf_rc_channels_t rc;
@@ -180,6 +208,31 @@ while ((pack = crsf_checkBuff()) != NULL) {
 }
 ```
 
+### Multiple parsers (thread safety)
+
+The legacy `crsf_init` / `crsf_addstr` / `crsf_checkBuff` functions are kept for backward compatibility: they share a single static context and are not thread-safe. For independent parsing in multiple threads use the context API — one `crsf_ctx_t` per thread.
+
+```c
+#include "crsf.h"
+
+crsf_ctx_t uart1_ctx;
+crsf_ctx_t uart2_ctx;
+
+crsf_ctx_init(&uart1_ctx);
+crsf_ctx_init(&uart2_ctx);
+
+// Each thread works only with its own context
+crsf_ctx_addstr(&uart1_ctx, rx_data1, len1);
+crsf_ctx_addstr(&uart2_ctx, rx_data2, len2);
+
+crsf_pack_t *pack;
+while ((pack = crsf_ctx_checkBuff(&uart1_ctx)) != NULL) {
+    // ...
+}
+```
+
+A single context must be used by one thread at a time (or be protected by a mutex). The `payload` / `raw` pointers in `crsf_pack_t` refer to the context buffer and stay valid until the next `crsf_ctx_checkBuff` / `crsf_ctx_reset` call on that context.
+
 ## Configuration
 All settings are located in `include/crsf_config.h`:
 
@@ -192,6 +245,7 @@ All settings are located in `include/crsf_config.h`:
 The library is covered by unit tests and stress tests:
 - `test_crc` — Validates the CRC8 DVB-S2 algorithm
 - `test_ringbuf` — Tests ring buffer behavior and stream resynchronization
+- `test_ctx` — Isolation of multiple independent parser contexts
 - `test_make` / `test_parse` — Tests packet generation and parsing
 
 ```bash

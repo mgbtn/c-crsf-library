@@ -124,6 +124,7 @@ typedef struct {
     uint8_t  parse_state;
     uint8_t  packet_buf[CRSF_MAX_PACKET_SIZE];
     size_t   packet_len;
+    crsf_pack_t pack;
 } crsf_ctx_t;
 
 #ifdef __cplusplus

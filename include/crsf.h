@@ -10,13 +10,19 @@
 extern "C" {
 #endif
 
-/* === Инициализация === */
+/* === Инициализация (устаревший однопоточный API) === */
 void crsf_init(void);
 void crsf_reset(void);
 
-/* === Приём данных === */
+/* === Приём данных (устаревший однопоточный API) === */
 void crsf_addstr(const uint8_t *data, size_t len);
 crsf_pack_t* crsf_checkBuff(void);
+
+/* === Контекстный API (независимые парсеры, потокобезопасно) === */
+void crsf_ctx_init(crsf_ctx_t *ctx);
+void crsf_ctx_reset(crsf_ctx_t *ctx);
+void crsf_ctx_addstr(crsf_ctx_t *ctx, const uint8_t *data, size_t len);
+crsf_pack_t* crsf_ctx_checkBuff(crsf_ctx_t *ctx);
 
 /* === Парсинг === */
 crsf_error_t crsf_getControl(const crsf_pack_t *pack, crsf_rc_channels_t *out);
