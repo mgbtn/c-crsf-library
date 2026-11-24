@@ -240,7 +240,73 @@ int main(void) {
     }
     
     /* ========================================================================
-     * Тест 6: Heartbeat (0x0B)
+     * Тест 6: Accel Gyro (0x13) — разбор заранее сформированного кадра
+     * ======================================================================== */
+    {
+        printf("--- Accel Gyro (0x13) ---\n");
+        
+        // C8 14 13 | 12 34 56 78 | 04D2 FB2E 7FFF | 8000 3039 FFFF | 0BB8 | D9
+        uint8_t raw[] = {
+            0xC8, 0x14, 0x13,
+            0x12, 0x34, 0x56, 0x78,   // sample_time = 305419896
+            0x04, 0xD2,               // gyro_x =  1234
+            0xFB, 0x2E,               // gyro_y = -1234
+            0x7F, 0xFF,               // gyro_z =  32767
+            0x80, 0x00,               // acc_x  = -32768
+            0x30, 0x39,               // acc_y  =  12345
+            0xFF, 0xFF,               // acc_z  = -1
+            0x0B, 0xB8,               // gyro_temp = 3000
+            0xD9                      // CRC
+        };
+        
+        TEST("accelGyro_frame_len", sizeof(raw) == 22);
+        TEST("accelGyro_crc", crsf_crc8(&raw[2], raw[1] - 1) == raw[sizeof(raw) - 1]);
+        
+        crsf_pack_t pack = {
+            .device = raw[0],
+            .length = raw[1],
+            .type = raw[2],
+            .payload = &raw[3],
+            .crc = raw[sizeof(raw) - 1],
+            .raw = raw
+        };
+        
+        crsf_accel_gyro_t ag;
+        crsf_error_t err = crsf_getAccelGyro(&pack, &ag);
+        printf("  parseAccelGyro err: %d\n", err);
+        TEST("parseAccelGyro_ok", err == CRSF_OK);
+        TEST("parseAccelGyro_time", ag.sample_time == 305419896u);
+        TEST("parseAccelGyro_gyro_x", ag.gyro_x == 1234);
+        TEST("parseAccelGyro_gyro_y", ag.gyro_y == -1234);
+        TEST("parseAccelGyro_gyro_z", ag.gyro_z == 32767);
+        TEST("parseAccelGyro_acc_x", ag.acc_x == -32768);
+        TEST("parseAccelGyro_acc_y", ag.acc_y == 12345);
+        TEST("parseAccelGyro_acc_z", ag.acc_z == -1);
+        TEST("parseAccelGyro_temp", ag.gyro_temp == 3000);
+        
+        crsf_pack_t pack_long = pack;
+        pack_long.length = 21;
+        TEST("parseAccelGyro_long", crsf_getAccelGyro(&pack_long, &ag) == CRSF_OK);
+        TEST("parseAccelGyro_long_time", ag.sample_time == 305419896u);
+        
+        crsf_pack_t pack_short = pack;
+        pack_short.length = 19;
+        TEST("parseAccelGyro_short",
+             crsf_getAccelGyro(&pack_short, &ag) == CRSF_ERR_INVALID_LENGTH);
+        
+        crsf_pack_t pack_wrong = pack;
+        pack_wrong.type = CRSF_FRAME_ATTITUDE;
+        TEST("parseAccelGyro_wrong_type",
+             crsf_getAccelGyro(&pack_wrong, &ag) == CRSF_ERR_INVALID_TYPE);
+        
+        TEST("parseAccelGyro_null_pack", crsf_getAccelGyro(NULL, &ag) == CRSF_ERR_INVALID_PAYLOAD);
+        TEST("parseAccelGyro_null_out", crsf_getAccelGyro(&pack, NULL) == CRSF_ERR_INVALID_PAYLOAD);
+        
+        printf("\n");
+    }
+    
+    /* ========================================================================
+     * Тест 7: Heartbeat (0x0B)
      * ======================================================================== */
     {
         printf("--- Heartbeat (0x0B) ---\n");

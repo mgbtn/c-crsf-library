@@ -253,6 +253,57 @@ int main(void) {
         printf("\n");
     }
     
+    /* ========================================================================
+     * Тест 7: Accel Gyro Round-Trip (0x13)
+     * ======================================================================== */
+    {
+        printf("--- Accel Gyro Round-Trip ---\n");
+        
+        uint8_t buf[64];
+        crsf_accel_gyro_t ag_in = {
+            .sample_time = 123456789,
+            .gyro_x = 1200,
+            .gyro_y = -2400,
+            .gyro_z = 32000,
+            .acc_x = -32768,
+            .acc_y = 12345,
+            .acc_z = -1,
+            .gyro_temp = 2500
+        };
+        
+        size_t len = crsf_makeAccelGyro(CRSF_ADDR_FLIGHT_CONTROLLER, &ag_in, buf);
+        printf("  AccelGyro len: %zu (expected 22)\n", len);
+        TEST("rtAccelGyro_gen", len == 22);
+        TEST("rtAccelGyro_len_field", buf[1] == 20);
+        TEST("rtAccelGyro_type", buf[2] == 0x13);
+        
+        uint8_t crc_calc = crsf_crc8(&buf[2], buf[1] - 1);
+        TEST("rtAccelGyro_crc", crc_calc == buf[2 + buf[1] - 1]);
+        
+        crsf_pack_t pack = {
+            .device = buf[0],
+            .length = buf[1],
+            .type = buf[2],
+            .payload = &buf[3],
+            .crc = buf[2 + buf[1] - 1],
+            .raw = buf
+        };
+        
+        crsf_accel_gyro_t ag_out;
+        crsf_error_t err = crsf_getAccelGyro(&pack, &ag_out);
+        TEST("rtAccelGyro_parse", err == CRSF_OK);
+        TEST("rtAccelGyro_time", ag_out.sample_time == ag_in.sample_time);
+        TEST("rtAccelGyro_gyro_x", ag_out.gyro_x == ag_in.gyro_x);
+        TEST("rtAccelGyro_gyro_y", ag_out.gyro_y == ag_in.gyro_y);
+        TEST("rtAccelGyro_gyro_z", ag_out.gyro_z == ag_in.gyro_z);
+        TEST("rtAccelGyro_acc_x", ag_out.acc_x == ag_in.acc_x);
+        TEST("rtAccelGyro_acc_y", ag_out.acc_y == ag_in.acc_y);
+        TEST("rtAccelGyro_acc_z", ag_out.acc_z == ag_in.acc_z);
+        TEST("rtAccelGyro_temp", ag_out.gyro_temp == ag_in.gyro_temp);
+        
+        printf("\n");
+    }
+    
     printf("=== Generator Tests: %d passed, %d failed ===\n", pass, fail);
     return fail ? 1 : 0;
 }
