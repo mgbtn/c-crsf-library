@@ -85,7 +85,7 @@ while ((pack = crsf_ctx_checkBuff(&ctx)) != NULL) {
 
 ### Несколько парсеров (потокобезопасность)
 
-Старые функции `crsf_init` / `crsf_addstr` / `crsf_checkBuff` оставлены для обратной совместимости: они используют общий статический контекст и не потокобезопасны. Для независимого разбора в нескольких потоках используйте контекстный API — каждому потоку свой `crsf_ctx_t`.
+Для независимого разбора в нескольких потоках используйте контекстный API — каждому потоку свой `crsf_ctx_t`.
 
 ```c
 #include "crsf.h"
@@ -210,7 +210,7 @@ while ((pack = crsf_ctx_checkBuff(&ctx)) != NULL) {
 
 ### Multiple parsers (thread safety)
 
-The legacy `crsf_init` / `crsf_addstr` / `crsf_checkBuff` functions are kept for backward compatibility: they share a single static context and are not thread-safe. For independent parsing in multiple threads use the context API — one `crsf_ctx_t` per thread.
+For independent parsing in multiple threads use the context API — one `crsf_ctx_t` per thread.
 
 ```c
 #include "crsf.h"

@@ -7,7 +7,6 @@ set(CMAKE_C_EXTENSIONS ON)
 
 add_compile_options(-Wall -Wextra -pedantic)
 
-# Библиотека
 add_library(crsf_lib STATIC
     src/crsf_core.c
     src/crsf_crc.c
@@ -19,7 +18,6 @@ target_include_directories(crsf_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-# Тесты
 option(CRSF_BUILD_TESTS "Build unit tests" ON)
 if(CRSF_BUILD_TESTS)
     enable_testing()
@@ -46,7 +44,6 @@ if(CRSF_BUILD_TESTS)
     
 endif()
 
-# Установка
 install(TARGETS crsf_lib
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
