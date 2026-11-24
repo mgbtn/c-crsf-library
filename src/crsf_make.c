@@ -163,6 +163,33 @@ size_t crsf_makeAttitude(uint8_t device, const crsf_attitude_t *att, uint8_t *ou
 }
 
 /* ============================================================================
+ * 0x13 ACCEL GYRO (18 байт payload)
+ * ============================================================================ */
+
+size_t crsf_makeAccelGyro(uint8_t device, const crsf_accel_gyro_t *ag, uint8_t *out_buf) {
+    if (!ag || !out_buf) return 0;
+    
+    uint8_t len = 20;
+    
+    out_buf[0] = device;
+    out_buf[1] = len;
+    out_buf[2] = CRSF_FRAME_ACCEL_GYRO;
+    
+    be32_write(&out_buf[3], ag->sample_time);
+    be16_write(&out_buf[7], (uint16_t)ag->gyro_x);
+    be16_write(&out_buf[9], (uint16_t)ag->gyro_y);
+    be16_write(&out_buf[11], (uint16_t)ag->gyro_z);
+    be16_write(&out_buf[13], (uint16_t)ag->acc_x);
+    be16_write(&out_buf[15], (uint16_t)ag->acc_y);
+    be16_write(&out_buf[17], (uint16_t)ag->acc_z);
+    be16_write(&out_buf[19], (uint16_t)ag->gyro_temp);
+    
+    out_buf[2 + len - 1] = crsf_crc8(&out_buf[2], len - 1);
+    
+    return 2 + len;
+}
+
+/* ============================================================================
  * 0x0B HEARTBEAT (0 байт payload)
  * ============================================================================ */
 

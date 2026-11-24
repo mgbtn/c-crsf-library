@@ -30,6 +30,7 @@ crsf_error_t crsf_getGPS(const crsf_pack_t *pack, crsf_gps_t *out);
 crsf_error_t crsf_getBattery(const crsf_pack_t *pack, crsf_battery_t *out);
 crsf_error_t crsf_getLinkStats(const crsf_pack_t *pack, crsf_link_stats_t *out);
 crsf_error_t crsf_getAttitude(const crsf_pack_t *pack, crsf_attitude_t *out);
+crsf_error_t crsf_getAccelGyro(const crsf_pack_t *pack, crsf_accel_gyro_t *out);
 crsf_error_t crsf_getFlightMode(const crsf_pack_t *pack, crsf_flight_mode_t *out);
 
 /* === Генерация === */
@@ -38,6 +39,7 @@ size_t crsf_makeGPS(uint8_t device, const crsf_gps_t *gps, uint8_t *out_buf);
 size_t crsf_makeBattery(uint8_t device, const crsf_battery_t *bat, uint8_t *out_buf);
 size_t crsf_makeLinkStats(uint8_t device, const crsf_link_stats_t *stats, uint8_t *out_buf);
 size_t crsf_makeAttitude(uint8_t device, const crsf_attitude_t *att, uint8_t *out_buf);
+size_t crsf_makeAccelGyro(uint8_t device, const crsf_accel_gyro_t *ag, uint8_t *out_buf);
 size_t crsf_makeHeartbeat(uint8_t device, uint8_t *out_buf);
 
 /* === Утилиты === */

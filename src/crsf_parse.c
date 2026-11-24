@@ -158,6 +158,32 @@ crsf_error_t crsf_getAttitude(const crsf_pack_t *pack, crsf_attitude_t *out) {
 }
 
 /* ============================================================================
+ * 0x13 ACCEL GYRO (18 байт payload)
+ * ============================================================================ */
+
+crsf_error_t crsf_getAccelGyro(const crsf_pack_t *pack, crsf_accel_gyro_t *out) {
+    if (!pack || !out) return CRSF_ERR_INVALID_PAYLOAD;
+    if (pack->type != CRSF_FRAME_ACCEL_GYRO) return CRSF_ERR_INVALID_TYPE;
+    
+    if (pack->length < 20) {
+        CRSF_LOG("PARSE ACCEL_GYRO: bad length %u < 20", pack->length);
+        return CRSF_ERR_INVALID_LENGTH;
+    }
+    if (!pack->payload) return CRSF_ERR_INVALID_PAYLOAD;
+    
+    out->sample_time = be32(&pack->payload[0]);
+    out->gyro_x      = be16s(&pack->payload[4]);
+    out->gyro_y      = be16s(&pack->payload[6]);
+    out->gyro_z      = be16s(&pack->payload[8]);
+    out->acc_x       = be16s(&pack->payload[10]);
+    out->acc_y       = be16s(&pack->payload[12]);
+    out->acc_z       = be16s(&pack->payload[14]);
+    out->gyro_temp   = be16s(&pack->payload[16]);
+    
+    return CRSF_OK;
+}
+
+/* ============================================================================
  * 0x21 FLIGHT MODE
  * ============================================================================ */
 

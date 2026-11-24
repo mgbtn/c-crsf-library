@@ -6,7 +6,7 @@
 
 ## Особенности
 
-- **Поддержка пакетов:** RC Channels, GPS, Battery Sensor, Link Statistics, Attitude, Flight Mode, Heartbeat
+- **Поддержка пакетов:** RC Channels, GPS, Battery Sensor, Link Statistics, Attitude, Accel Gyro, Flight Mode, Heartbeat
 - **Битовая упаковка:** Корректная работа с 11-битными значениями каналов (little-endian bit packing)
 - **Кольцевой буфер** с защитой от переполнения и автоматической ресинхронизацией потока
 - **Нулевые зависимости:** Чистый C99, работает на микроконтроллерах, Linux, Windows, macOS
@@ -140,7 +140,7 @@ ctest --test-dir build -C Release --output-on-failure
 A cross-platform C99 library for parsing and generating CRSF/ELRS protocol packets.
 
 ## Features
-- **Supported Packets:** RC Channels, GPS, Battery Sensor, Link Statistics, Attitude, Flight Mode, Heartbeat
+- **Supported Packets:** RC Channels, GPS, Battery Sensor, Link Statistics, Attitude, Accel Gyro, Flight Mode, Heartbeat
 - **Bit Packing:** Correct handling of 11-bit channel values (little-endian bit packing)
 - **Ring Buffer:** Overflow-protected with automatic stream resynchronization
 - **Zero Dependencies:** Pure C99, compatible with microcontrollers, Linux, Windows, and macOS

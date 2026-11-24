@@ -99,6 +99,17 @@ typedef struct __attribute__((packed)) {
     int16_t yaw;
 } crsf_attitude_t;
 
+typedef struct __attribute__((packed)) {
+    uint32_t sample_time;   // Отметка времени выборки, мкс
+    int16_t  gyro_x;        // LSB = INT16_MAX/2000 DPS
+    int16_t  gyro_y;        // LSB = INT16_MAX/2000 DPS
+    int16_t  gyro_z;        // LSB = INT16_MAX/2000 DPS
+    int16_t  acc_x;         // LSB = INT16_MAX/16 G
+    int16_t  acc_y;         // LSB = INT16_MAX/16 G
+    int16_t  acc_z;         // LSB = INT16_MAX/16 G
+    int16_t  gyro_temp;     // Температура гироскопа, сотые доли градуса
+} crsf_accel_gyro_t;
+
 typedef struct {
     char mode[17];
 } crsf_flight_mode_t;
